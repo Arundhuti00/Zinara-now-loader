@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zinara Z-Now entry flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital@1&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+@property --p { syntax: "<percentage>"; inherits: false; initial-value: 0%; }
+
+:root {
+  --wine: #712242;
+  --wine-deep: #371120;
+  --wine-mid: #4A162C;
+  --rose: #D5729A;
+  --pink: #ECC0D2;
+  --blush: #EFE6EA;
+  --error: #F0166E;
+  --page: #1a1217;
+  --font: "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --serif: "Libre Baskerville", Georgia, serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; background: var(--page); }
+body {
+  background: var(--page);
+  font-family: var(--font);
+  color: #fff;
+  display: grid;
+  grid-template-columns: 224px minmax(0, 1fr);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--rose); outline-offset: 2px; }
+
+/* ---------- Prototype controls: slim left column ---------- */
+.side {
+  display: flex; flex-direction: column; gap: 22px;
+  padding: 24px 20px; overflow-y: auto;
+  background: #211820; border-right: 1px solid #3a2a33;
+  font-size: 12px; font-weight: 500; text-align: left;
+}
+.side h1 { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.ctls { display: flex; flex-direction: column; gap: 20px; }
+.chips { flex-wrap: wrap; }
+.stage { display: grid; place-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 20px; }
+.ctl { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
+.ctl > .lbl { color: #b9a7b0; font-size: 11px; letter-spacing: .02em; }
+.chips { display: flex; gap: 6px; }
+.chip, .seg button {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #5a4450;
+  color: var(--blush);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.chip[aria-pressed="true"], .seg button[aria-checked="true"] {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: var(--wine-deep);
+}
+.seg { display: flex; border: 1px solid #5a4450; border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; border-radius: 0; }
+.switch { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; font-weight: 600; color: var(--blush); }
+.switch .track {
+  width: 34px; height: 20px; border-radius: 999px; background: #5a4450;
+  position: relative; transition: background .15s;
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  border-radius: 50%; background: #fff; transition: transform .15s;
+}
+.switch[aria-checked="true"] .track { background: var(--error); }
+.switch[aria-checked="true"] .track::after { transform: translateX(14px); }
+.replay {
+  padding: 7px 18px; border-radius: 999px; background: var(--wine); color: #fff;
+  font-size: 12px; font-weight: 700;
+}
+.replay:hover { background: #823055; }
+@media (max-width: 700px) { body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); } .side { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid #3a2a33; } }
+
+/* ---------- Screen (mobile / desktop) ---------- */
+.screen {
+  --w: 393px; --h: 850px; --ch: 102px;
+  --home: url(assets/home-bg.png);
+  --kx: 1; --icon-h: 96px; --icon-top: 236px; --msg-top: 368px;
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  flex: none;
+  overflow: hidden;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 0 0 1px #3a2a33, 0 24px 60px rgba(0, 0, 0, .5);
+  isolation: isolate;
+  color: #000;
+}
+.screen[data-device="desktop"] {
+  --w: 1280px; --h: 832px; --ch: 73px;
+  --home: url(assets/home-bg-desktop.png);
+  --kx: 3; --icon-h: 120px; --icon-top: 240px; --msg-top: 392px;
+  border-radius: 10px;
+}
+.layer { position: absolute; left: 0; width: 100%; }
+.home { top: 0; height: var(--h); background: var(--home) 0 0 / var(--w) var(--h) no-repeat; }
+.dim { top: var(--ch); bottom: 0; background: rgba(0, 0, 0, .6); z-index: 5; }
+
+/* Static top bars (status + Safari / browser bars), identical on every screen */
+.chrome { top: 0; height: var(--ch); z-index: 50; pointer-events: none;
+  background: var(--home) 0 0 / var(--w) var(--h) no-repeat; }
+
+/* ---------- Location sheet (mobile) / dialog (desktop) ---------- */
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 10;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  padding: 16px 16px 24px;
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; height: 24px; }
+.sheet-head h2 { font-size: 16px; line-height: 24px; font-weight: 600; color: #000; }
+.x { width: 21px; height: 21px; display: grid; place-items: center; border-radius: 50%; }
+.dk { display: none; }
+.field {
+  margin-top: 24px; height: 44px; border: 1px solid #e0e0e0; border-radius: 8px;
+  display: flex; align-items: center; gap: 8px; padding: 0 12px;
+}
+.ring {
+  width: 16px; height: 16px; margin: 0 4px; border-radius: 50%; flex: none;
+  border: 2px solid var(--wine); border-top-color: transparent;
+  animation: spin .9s linear infinite;
+}
+.ring.stopped { animation: none; border-color: var(--error); border-top-color: transparent; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pin {
+  width: 6.4ch; border: 0; outline: 0; background: none;
+  font: 500 16px/20px var(--font); color: #000; margin-left: 4px;
+}
+.field:focus-within { border-color: var(--wine); }
+.area { font-size: 12px; font-weight: 500; color: #666; }
+.change { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--wine); text-decoration: underline; }
+.status { margin-top: 8px; min-height: 18px; text-align: center; font-size: 12px; line-height: 18px; font-weight: 500; color: var(--wine); }
+.status.err { color: var(--error); }
+.alt { margin-top: 12px; }
+.or { text-align: center; font-size: 14px; line-height: 22px; font-weight: 500; color: #999; }
+.loc {
+  margin: 8px auto 0; display: flex; align-items: center; gap: 4px;
+  font-size: 16px; line-height: 20px; font-weight: 600; color: #999; text-decoration: underline;
+}
+.actions { display: none; margin-top: 16px; flex-direction: column; align-items: center; gap: 14px; }
+.sheet.failed .alt { display: none; }
+.sheet.failed .actions { display: flex; animation: appear .2s ease-out; }
+@keyframes appear { from { opacity: 0; } to { opacity: 1; } }
+.primary {
+  width: 100%; height: 44px; border-radius: 8px; background: var(--wine); color: #fff;
+  font-size: 14px; font-weight: 600;
+}
+.textlink { font-size: 13px; font-weight: 600; color: var(--wine); text-decoration: underline; }
+
+/* desktop dialog */
+.screen[data-device="desktop"] .sheet {
+  left: 50%; right: auto; bottom: auto; width: 558px; margin-left: -279px;
+  top: calc(var(--ch) + 184px);
+  border-radius: 24px; padding: 0 16px 16px;
+}
+.screen[data-device="desktop"] .sheet-head { position: absolute; top: 16px; right: 16px; height: 24px; }
+.screen[data-device="desktop"] .sheet-head h2 { display: none; }
+.screen[data-device="desktop"] .x { width: 24px; height: 24px; }
+.screen[data-device="desktop"] .dk { display: flex; }
+.screen[data-device="desktop"] .field { margin-top: 20px; }
+.screen[data-device="desktop"] .or { color: #666; }
+.dk-top { flex-direction: column; align-items: center; padding-top: 64px; text-align: center; }
+.pinic { width: 44px; height: 44px; border-radius: 50%; background: #f7f3f5; display: grid; place-items: center; }
+.dk-top h3 { margin-top: 20px; font-size: 20px; line-height: 24px; font-weight: 500; color: var(--wine); }
+.dk-top p { margin-top: 6px; max-width: 478px; font-size: 14px; line-height: 22px; font-weight: 500; color: #494949; }
+
+/* ---------- Z-Now loader ---------- */
+.loader {
+  display: none; top: var(--ch); height: calc(var(--h) - var(--ch)); z-index: 20; overflow: hidden;
+  background: var(--wine-deep);
+}
+.grad {
+  position: absolute; inset: 0; overflow: hidden;
+  --p: 0%;
+  -webkit-mask-image: linear-gradient(to top, #000 calc(var(--p) - 45%), transparent var(--p));
+          mask-image: linear-gradient(to top, #000 calc(var(--p) - 45%), transparent var(--p));
+}
+.blob { position: absolute; border-radius: 50%; will-change: transform; }
+.b1 { width: 620px; height: 620px; left: -200px; bottom: -280px; background: var(--wine);
+  filter: blur(60px); animation: drift1 9s ease-in-out infinite alternate; }
+.b2 { width: 520px; height: 520px; right: -220px; top: -40px; background: var(--wine-deep);
+  filter: blur(70px); animation: drift2 11s ease-in-out infinite alternate; }
+.b3 { width: 560px; height: 560px; left: -60px; top: 60px; background: var(--wine-mid);
+  filter: blur(70px); animation: drift3 12s ease-in-out infinite alternate; }
+.b4 { width: 320px; height: 320px; left: 90px; bottom: 20px; background: var(--rose); opacity: .28;
+  filter: blur(70px); animation: drift4 10s ease-in-out infinite alternate; }
+.b5 { width: 380px; height: 380px; right: -140px; bottom: -60px; background: var(--rose); opacity: .3;
+  filter: blur(75px); animation: drift5 13s ease-in-out infinite alternate; }
+.screen[data-device="desktop"] .b1 { width: 900px; height: 900px; left: -260px; bottom: -480px; filter: blur(90px); }
+.screen[data-device="desktop"] .b2 { width: 760px; height: 760px; right: -260px; top: -160px; filter: blur(100px); }
+.screen[data-device="desktop"] .b3 { width: 820px; height: 820px; left: 120px; top: -20px; filter: blur(100px); }
+.screen[data-device="desktop"] .b4 { width: 520px; height: 520px; left: 260px; bottom: -60px; filter: blur(100px); }
+.screen[data-device="desktop"] .b5 { width: 560px; height: 560px; right: -160px; bottom: -180px; filter: blur(100px); }
+
+@keyframes drift1 {
+  0%   { transform: translate(0, 0) scale(1); }
+  35%  { transform: translate(calc(200px * var(--kx)), -120px) scale(1.18); }
+  70%  { transform: translate(calc(120px * var(--kx)), -330px) scale(.92); }
+  100% { transform: translate(calc(300px * var(--kx)), -420px) scale(1.2); }
+}
+@keyframes drift2 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(calc(-260px * var(--kx)), 160px) scale(1.2); }
+  75%  { transform: translate(calc(-120px * var(--kx)), 380px) scale(.9); }
+  100% { transform: translate(calc(-300px * var(--kx)), 520px) scale(1.15); }
+}
+@keyframes drift3 {
+  0%   { transform: translate(0, 0) scale(1.1); }
+  40%  { transform: translate(calc(260px * var(--kx)), 120px) scale(.9); }
+  70%  { transform: translate(calc(120px * var(--kx)), 360px) scale(1.2); }
+  100% { transform: translate(calc(300px * var(--kx)), 280px) scale(1); }
+}
+@keyframes drift4 {
+  0%   { transform: translate(0, 0) scale(1); }
+  40%  { transform: translate(calc(180px * var(--kx)), -220px) scale(1.25); }
+  100% { transform: translate(calc(-60px * var(--kx)), -420px) scale(.85); }
+}
+@keyframes drift5 {
+  0%   { transform: translate(0, 0) scale(1); }
+  35%  { transform: translate(calc(-150px * var(--kx)), -200px) scale(1.2); }
+  70%  { transform: translate(calc(-40px * var(--kx)), -400px) scale(.9); }
+  100% { transform: translate(calc(-200px * var(--kx)), -560px) scale(1.15); }
+}
+
+.icon-wrap { position: absolute; left: 0; right: 0; top: var(--icon-top); height: var(--icon-h); display: flex; justify-content: center; opacity: 0; }
+.icon { display: none; height: var(--icon-h); width: auto; overflow: visible; }
+.icon.on { display: block; }
+.icon circle { transform-box: fill-box; transform-origin: center; opacity: 0; }
+.icon .drop, .icon .head { transform-box: fill-box; transform-origin: center; opacity: 0; }
+.icon .line { stroke-dasharray: 100; stroke-dashoffset: 100; }
+.icon.done circle, .icon.done .drop, .icon.done .head { opacity: 1; }
+.icon.done .line { stroke-dashoffset: 0; }
+
+.msg { position: absolute; left: 24px; right: 24px; top: var(--msg-top); text-align: center; opacity: 0; }
+.msg .w { display: inline-block; opacity: 0; will-change: transform; }
+.msg .l1 { font-family: var(--serif); font-style: italic; font-size: 24px; line-height: 32px; color: var(--blush); }
+.screen[data-device="desktop"] .msg .l1 { font-size: 32px; line-height: 42px; }
+.screen[data-device="desktop"] 
+/* ---------- PLP photo ---------- */
+.plp { top: 0; height: var(--h); z-index: 30; visibility: hidden; opacity: 0; pointer-events: none; }
+.plp img { display: none; width: var(--w); height: var(--h); user-select: none; -webkit-user-drag: none; }
+.screen[data-device="mobile"] .plp .pm { display: block; }
+.screen[data-device="desktop"] .plp .pd { display: block; }
+.logo-hit {
+  position: absolute; left: 44px; top: 146px; width: 100px; height: 42px; z-index: 60;
+  display: none; cursor: pointer; border-radius: 6px;
+}
+.screen[data-device="desktop"] .logo-hit { left: 108px; top: 128px; width: 104px; height: 40px; }
+.logo-hit.on { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .blob { animation: none; }
+  .ring { animation-duration: 2s; }
+}
+</style>
+</head>
+<body>
+
+<aside class="side" role="toolbar" aria-label="Prototype controls">
+  <h1>Z-Now prototype</h1>
+  <div class="ctls">
+    <div class="ctl">
+      <span class="lbl" id="devLbl">Device</span>
+      <div class="seg" role="radiogroup" aria-labelledby="devLbl">
+        <button role="radio" data-device="mobile" aria-checked="true">Mobile</button>
+        <button role="radio" data-device="desktop" aria-checked="false">Desktop</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl" id="iconLbl">Loader icon</span>
+      <div class="chips" role="group" aria-labelledby="iconLbl">
+        <button class="chip" data-variant="led" aria-pressed="true">LED dots</button>
+        <button class="chip" data-variant="route" aria-pressed="false">Route arrow</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl" id="plpLbl">PLP load</span>
+      <div class="seg" role="radiogroup" aria-labelledby="plpLbl">
+        <button role="radio" data-ms="1000" aria-checked="false">1s</button>
+        <button role="radio" data-ms="2500" aria-checked="true">2.5s</button>
+        <button role="radio" data-ms="5000" aria-checked="false">5s</button>
+      </div>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Pincode check</span>
+      <button class="switch" id="fail" role="switch" aria-checked="false">
+        <span class="track"></span><span>Not deliverable</span>
+      </button>
+    </div>
+    <div class="ctl">
+      <span class="lbl">Prototype</span>
+      <button class="replay" id="replay">Replay</button>
+    </div>
+  </div>
+</aside>
+
+<div class="stage" id="stage">
+<main class="screen" id="screen" data-device="mobile" aria-label="Zinara prototype">
+  <div class="layer home" aria-hidden="true"></div>
+  <div class="layer dim" id="dim"></div>
+
+  <section class="sheet" id="sheet" role="dialog" aria-label="Select delivery location">
+    <div class="sheet-head">
+      <h2>Select delivery location</h2>
+      <button class="x" id="close" aria-label="Close">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#666" stroke-width="1.6" stroke-linecap="round"><path d="M1.5 1.5l10 10M11.5 1.5l-10 10"/></svg>
+      </button>
+    </div>
+    <div class="dk dk-top">
+      <div class="pinic"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#712242" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 18s6-5.2 6-9.6A6 6 0 0 0 4 8.4C4 12.8 10 18 10 18z"/><circle cx="10" cy="8.5" r="2.2"/></svg></div>
+      <h3>Location permission</h3>
+      <p>Search for you location to see items available for same day delivery in your area.</p>
+    </div>
+    <div class="field">
+      <span class="ring" id="ring" aria-hidden="true"></span>
+      <input class="pin" id="pin" value="110017" inputmode="numeric" maxlength="6" aria-label="Pincode">
+      <span class="area">| Saket</span>
+      <button class="change" id="change">Change</button>
+    </div>
+    <p class="status" id="status" role="status">Checking delivery to 110017…</p>
+    <div class="alt">
+      <p class="or">OR</p>
+      <button class="loc">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#999" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="9" r="4.5"/><circle cx="9" cy="9" r="1.2" fill="#999" stroke="none"/><path d="M9 1v3M9 14v3M1 9h3M14 9h3"/></svg>
+        Use my location
+      </button>
+    </div>
+    <div class="actions">
+      <button class="primary" id="another">Try another pincode</button>
+      <button class="textlink" id="standard">Continue with standard delivery</button>
+    </div>
+  </section>
+
+  <div class="layer loader" id="loader">
+    <div class="grad" id="grad">
+      <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div>
+    </div>
+    <div class="icon-wrap" id="iconWrap" aria-hidden="true">
+      <svg class="icon on" id="led" viewBox="55 31 41 35" xmlns="http://www.w3.org/2000/svg" fill="#ECC0D2">
+        <circle cx="65" cy="35" r="3"/><circle cx="74" cy="35" r="3"/><circle cx="83" cy="35" r="3"/><circle cx="92" cy="35" r="3"/>
+        <circle cx="81" cy="44" r="3"/><circle cx="70" cy="53" r="3"/>
+        <circle cx="59" cy="62" r="3"/><circle cx="68" cy="62" r="3"/><circle cx="77" cy="62" r="3"/><circle cx="86" cy="62" r="3"/>
+      </svg>
+      <svg class="icon" id="route" viewBox="54 30 42 40" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ECC0D2">
+        <rect class="drop" x="63.2856" y="32.1992" width="3.42857" height="3.42857" fill="#ECC0D2" stroke="none"/>
+        <path class="line" pathLength="100" d="M68.4289 34H91.8571L58 61H86" stroke-width="3.5" stroke-linejoin="round"/>
+        <path class="head" d="M80 55L86 61L80 67" stroke-width="3.5" stroke-linecap="square" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="msg" id="msg" aria-live="polite"></div>
+  </div>
+
+  <div class="layer plp" id="plp">
+    <img class="pm" src="assets/plp.png" alt="Z-Now product listing page" draggable="false">
+    <img class="pd" src="assets/plp-desktop.png" alt="Z-Now product listing page" draggable="false">
+  </div>
+  <button class="logo-hit" id="logo" aria-label="Zinara logo, restart the flow" title="Restart"></button>
+  <div class="layer chrome" aria-hidden="true"></div>
+</main>
+</div>
+
+<script>
+(function () {
+  var $ = function (s) { return document.querySelector(s); };
+  var els = {
+    screen: $("#screen"), dim: $("#dim"), sheet: $("#sheet"), ring: $("#ring"), pin: $("#pin"), status: $("#status"),
+    loader: $("#loader"), grad: $("#grad"), iconWrap: $("#iconWrap"), led: $("#led"), route: $("#route"),
+    msg: $("#msg"), plp: $("#plp"), logo: $("#logo")
+  };
+  var cfg = { device: "mobile", variant: "led", fail: false, plpMs: 2500 };
+  var runId = 0, iconSeq = 0, live = [], iconLive = [];
+  var MIN_LOADER = 1200;
+  var reduced = function () { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; };
+  var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+
+  function anim(el, kf, opt, bucket) {
+    var a = el.animate(kf, Object.assign({ fill: "forwards" }, opt));
+    (bucket || live).push(a);
+    return a.finished.catch(function () {});
+  }
+  function cancelAll() {
+    live.concat(iconLive).forEach(function (a) { a.cancel(); });
+    live = []; iconLive = [];
+  }
+  function cancelIcon() {
+    iconLive.forEach(function (a) { a.cancel(); });
+    iconLive = [];
+  }
+
+  /* scale the screen down so its full height and width fit the viewport stage */
+  function fit() {
+    var d = els.screen.dataset.device === "desktop";
+    var w = d ? 1280 : 393, h = d ? 832 : 850;
+    var st = document.getElementById("stage");
+    var z = Math.min(1, (st.clientWidth - 40) / w, (st.clientHeight - 40) / h);
+    els.screen.style.zoom = z < 1 ? z : "";
+  }
+  window.addEventListener("resize", fit);
+
+  /* ---------- reset to first frame ---------- */
+  function reset() {
+    runId++; iconSeq++;
+    cancelAll();
+    els.dim.style.display = ""; els.sheet.style.display = "";
+    els.sheet.classList.remove("failed");
+    els.ring.classList.remove("stopped");
+    els.status.classList.remove("err");
+    els.status.textContent = "Checking delivery to 110017…";
+    els.pin.value = "110017";
+    els.loader.style.display = "none";
+    els.iconWrap.style.opacity = 0;
+    els.msg.style.opacity = 0; els.msg.textContent = "";
+    els.led.classList.remove("done"); els.route.classList.remove("done");
+    els.plp.style.visibility = "hidden"; els.plp.style.opacity = 0;
+    els.logo.classList.remove("on");
+    document.activeElement && document.activeElement.blur && document.activeElement.blur();
+  }
+
+  /* ---------- sheet / dialog ---------- */
+  function closeSheet() {
+    var desktop = cfg.device === "desktop";
+    anim(els.dim, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, easing: "ease-out" });
+    if (reduced()) return anim(els.sheet, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 });
+    if (desktop) return anim(els.sheet, [
+      { opacity: 1, transform: "translateY(0) scale(1)" },
+      { opacity: 0, transform: "translateY(10px) scale(.97)" }
+    ], { duration: 250, easing: "ease-out" });
+    return anim(els.sheet, [{ transform: "translateY(0)" }, { transform: "translateY(100%)" }], { duration: 250, easing: "ease-out" });
+  }
+  function showError() {
+    els.ring.classList.add("stopped");
+    els.status.classList.add("err");
+    els.status.textContent = "Z-Now doesn't deliver to " + els.pin.value + " yet. Standard delivery arrives by Tue, 27 Oct.";
+    els.sheet.classList.add("failed");
+  }
+
+  /* ---------- icon cycles ---------- */
+  function iconEl() { return cfg.variant === "led" ? els.led : els.route; }
+  var alive = function (seq, id) { return seq === iconSeq && id === runId; };
+
+  async function ledCycle(seq, id) {
+    var dots = Array.prototype.slice.call(els.led.querySelectorAll("circle"));
+    dots.forEach(function (d, i) {
+      anim(d, [
+        { opacity: 0, transform: "scale(0)" },
+        { opacity: 1, transform: "scale(1.15)", offset: .6 },
+        { opacity: 1, transform: "scale(1)" }
+      ], { duration: 180, delay: i * 80, fill: "both", easing: "ease-out" }, iconLive);
+    });
+    await sleep((dots.length - 1) * 80 + 180 + 400);
+    if (!alive(seq, id)) return false;
+    var fade = anim(els.led, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 }, iconLive);
+    await fade;
+    if (!alive(seq, id)) return false;
+    cancelIcon();                       // dots back to hidden while the group is still faded
+    anim(els.led, [{ opacity: 0 }, { opacity: 0 }], { duration: 150 }, iconLive);
+    await sleep(150);
+    if (!alive(seq, id)) return false;
+    cancelIcon();
+    return true;
+  }
+
+  async function routeCycle(seq, id) {
+    var drop = els.route.querySelector(".drop"), line = els.route.querySelector(".line"), head = els.route.querySelector(".head");
+    anim(drop, [
+      { transform: "scale(0)", opacity: 1 },
+      { transform: "scale(1.25)", opacity: 1, offset: .6 },
+      { transform: "scale(1)", opacity: 1 }
+    ], { duration: 150, easing: "ease-out" }, iconLive);
+    await sleep(150); if (!alive(seq, id)) return false;
+    anim(line, [{ strokeDashoffset: 100 }, { strokeDashoffset: 0 }], { duration: 900, easing: "ease-in-out" }, iconLive);
+    await sleep(900); if (!alive(seq, id)) return false;
+    anim(head, [{ opacity: 0, transform: "scale(.6)" }, { opacity: 1, transform: "scale(1)" }], { duration: 200, easing: "ease-out" }, iconLive);
+    await sleep(200 + 400); if (!alive(seq, id)) return false;
+    anim(line, [{ strokeDashoffset: 0 }, { strokeDashoffset: -100 }], { duration: 600, easing: "ease-in-out" }, iconLive);
+    anim(drop, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 }, iconLive);
+    anim(head, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, delay: 350 }, iconLive);
+    await sleep(600); if (!alive(seq, id)) return false;
+    cancelIcon();
+    await sleep(150);
+    return alive(seq, id);
+  }
+
+  /* One cycle at a time. Returns once the PLP is ready and the cycle in flight has finished. */
+  async function iconLoop(id, isReady, onDone) {
+    var seq = ++iconSeq;
+    cancelIcon();
+    els.led.classList.remove("done"); els.route.classList.remove("done");
+    while (alive(seq, id)) {
+      var ok = await (cfg.variant === "led" ? ledCycle : routeCycle)(seq, id);
+      if (!alive(seq, id)) return;      // aborted by a restart (icon switch / replay)
+      if (ok && isReady()) { onDone(); return; }
+    }
+  }
+
+  /* ---------- loader + hand-off ---------- */
+  var loaderCtx = null;
+  async function runLoader(id) {
+    var ready = false, iconOn = false;
+    var readyAt = Math.max(MIN_LOADER, cfg.plpMs);
+    var isReady = function () { return ready; };
+    setTimeout(function () { if (id === runId) ready = true; }, readyAt);
+
+    els.loader.style.display = "block";
+    if (reduced()) anim(els.grad, [{ opacity: 0 }, { opacity: 1 }], { duration: 600 });
+    else anim(els.grad, [{ "--p": "0%" }, { "--p": "145%" }], { duration: 600, easing: "ease-out" });
+
+    var finished = new Promise(function (resolve) {
+      loaderCtx = {
+        start: function () {
+          iconOn = true;
+          els.iconWrap.style.opacity = 1;
+          iconEl().classList.add("on");
+          if (reduced()) { iconEl().classList.add("done"); (function poll() {
+            if (id !== runId) return;
+            if (ready) resolve(); else setTimeout(poll, 50);
+          })(); }
+          else iconLoop(id, isReady, resolve);
+        },
+        restart: function () { if (iconOn && !reduced()) iconLoop(id, isReady, resolve); }
+      };
+    });
+
+    setTimeout(function () { if (id === runId) loaderCtx.start(); }, 600);
+    setTimeout(function () {
+      if (id !== runId) return;
+      var words = "Yay, Z-Now delivers to Saket!".split(" ").map(function (w) { return '<span class="w">' + w + "</span>"; }).join(" ");
+      els.msg.innerHTML = '<p class="l1">' + words + '</p>';
+      els.msg.style.opacity = 1;
+      var rm = reduced();
+      els.msg.querySelectorAll(".w").forEach(function (w, i) {
+        anim(w, rm ? [{ opacity: 0 }, { opacity: 1 }] : [
+          { opacity: 0, transform: "translateY(14px) scale(.94)" },
+          { opacity: 1, transform: "translateY(-3px) scale(1.02)", offset: .6 },
+          { opacity: 1, transform: "translateY(0) scale(1)" }
+        ], { duration: rm ? 300 : 560, delay: i * 70, easing: "cubic-bezier(.34,1.56,.64,1)" });
+      });
+    }, 900);
+
+    await finished;
+    if (id !== runId) return;
+
+    // hand-off
+    await Promise.all([
+      anim(els.iconWrap, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 }),
+      anim(els.msg, [{ opacity: 1 }, { opacity: 0 }], { duration: 200 })
+    ]);
+    if (id !== runId) return;
+    els.plp.style.visibility = "visible";
+    var from = reduced() ? "translateY(0)" : "translateY(12px)";
+    await anim(els.plp, [{ opacity: 0, transform: from }, { opacity: 1, transform: "translateY(0)" }], { duration: 350, easing: "ease-out" });
+    if (id !== runId) return;
+    els.loader.style.display = "none";
+    els.logo.classList.add("on");
+  }
+
+  async function run() {
+    reset();
+    var id = runId;
+    await sleep(1500);
+    if (id !== runId) return;
+    if (cfg.fail) { showError(); return; }
+    await closeSheet();
+    if (id !== runId) return;
+    await runLoader(id);
+  }
+
+  /* ---------- controls ---------- */
+  document.querySelectorAll("button[data-device]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      cfg.device = b.dataset.device;
+      els.screen.dataset.device = cfg.device;
+      document.querySelectorAll("button[data-device]").forEach(function (c) { c.setAttribute("aria-checked", c === b); });
+      fit();
+      run();
+    });
+  });
+  document.querySelectorAll(".chip").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (cfg.variant === b.dataset.variant) return;
+      cfg.variant = b.dataset.variant;
+      document.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", c === b); });
+      els.led.classList.remove("on", "done"); els.route.classList.remove("on", "done");
+      iconSeq++; cancelIcon();
+      if (loaderCtx && els.iconWrap.style.opacity === "1" && els.loader.style.display === "block") {
+        iconEl().classList.add("on");
+        if (reduced()) iconEl().classList.add("done");
+        loaderCtx.restart();
+      }
+    });
+  });
+  $("#fail").addEventListener("click", function (e) {
+    cfg.fail = !cfg.fail; e.currentTarget.setAttribute("aria-checked", cfg.fail);
+  });
+  document.querySelectorAll(".seg button[data-ms]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      cfg.plpMs = +b.dataset.ms;
+      document.querySelectorAll(".seg button[data-ms]").forEach(function (c) { c.setAttribute("aria-checked", c === b); });
+    });
+  });
+  $("#replay").addEventListener("click", run);
+  els.logo.addEventListener("click", run);
+
+  function focusPin() { els.pin.focus(); els.pin.select(); }
+  $("#another").addEventListener("click", focusPin);
+  $("#change").addEventListener("click", focusPin);
+  function dismiss() { runId++; iconSeq++; closeSheet(); }
+  $("#standard").addEventListener("click", dismiss);
+  $("#close").addEventListener("click", dismiss);
+
+  fit();
+  run();
+})();
+</script>
+</body>
+</html>
