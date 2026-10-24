@@ -30,7 +30,7 @@ body {
   font-family: var(--font);
   color: #fff;
   display: grid;
-  grid-template-columns: 224px minmax(0, 1fr);
+  grid-template-columns: 288px minmax(0, 1fr);
   height: 100vh;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
@@ -40,24 +40,24 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 
 /* ---------- Prototype controls: slim left column ---------- */
 .side {
-  display: flex; flex-direction: column; gap: 22px;
-  padding: 24px 20px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 28px;
+  padding: 32px 24px; overflow-y: auto;
   background: #211820; border-right: 1px solid #3a2a33;
-  font-size: 12px; font-weight: 500; text-align: left;
+  font-size: 15px; font-weight: 500; text-align: left;
 }
-.side h1 { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: .02em; }
-.ctls { display: flex; flex-direction: column; gap: 20px; }
+.side h1 { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: .02em; }
+.ctls { display: flex; flex-direction: column; gap: 26px; }
 .chips { flex-wrap: wrap; }
 .stage { display: grid; place-items: center; min-width: 0; min-height: 0; overflow: hidden; padding: 20px; }
-.ctl { display: flex; flex-direction: column; align-items: flex-start; gap: 7px; }
-.ctl > .lbl { color: #b9a7b0; font-size: 11px; letter-spacing: .02em; }
+.ctl { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.ctl > .lbl { color: #c9b8c1; font-size: 14px; letter-spacing: .01em; }
 .chips { display: flex; gap: 6px; }
 .chip, .seg button {
-  padding: 6px 12px;
+  padding: 9px 16px;
   border-radius: 999px;
   border: 1px solid #5a4450;
   color: var(--blush);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
   transition: background .15s, color .15s, border-color .15s;
 }
@@ -68,20 +68,20 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 }
 .seg { display: flex; border: 1px solid #5a4450; border-radius: 999px; overflow: hidden; }
 .seg button { border: 0; border-radius: 0; }
-.switch { display: flex; align-items: center; gap: 8px; padding: 4px 0; font-size: 12px; font-weight: 600; color: var(--blush); }
+.switch { display: flex; align-items: center; gap: 12px; padding: 4px 0; font-size: 15px; font-weight: 600; color: var(--blush); }
 .switch .track {
-  width: 34px; height: 20px; border-radius: 999px; background: #5a4450;
+  width: 42px; height: 24px; border-radius: 999px; background: #5a4450;
   position: relative; transition: background .15s;
 }
 .switch .track::after {
-  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+  content: ""; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
   border-radius: 50%; background: #fff; transition: transform .15s;
 }
 .switch[aria-checked="true"] .track { background: var(--error); }
-.switch[aria-checked="true"] .track::after { transform: translateX(14px); }
+.switch[aria-checked="true"] .track::after { transform: translateX(18px); }
 .replay {
-  padding: 7px 18px; border-radius: 999px; background: var(--wine); color: #fff;
-  font-size: 12px; font-weight: 700;
+  padding: 10px 24px; border-radius: 999px; background: var(--wine); color: #fff;
+  font-size: 15px; font-weight: 700;
 }
 .replay:hover { background: #823055; }
 @media (max-width: 700px) { body { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); } .side { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid #3a2a33; } }
@@ -245,10 +245,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .icon-wrap { position: absolute; left: 0; right: 0; top: var(--icon-top); height: var(--icon-h); display: flex; justify-content: center; opacity: 0; }
 .icon { display: none; height: var(--icon-h); width: auto; overflow: visible; }
 .icon.on { display: block; }
-.icon circle { transform-box: fill-box; transform-origin: center; opacity: 0; }
 .icon .drop, .icon .head { transform-box: fill-box; transform-origin: center; opacity: 0; }
 .icon .line { stroke-dasharray: 100; stroke-dashoffset: 100; }
-.icon.done circle, .icon.done .drop, .icon.done .head { opacity: 1; }
+.icon.done .drop, .icon.done .head { opacity: 1; }
 .icon.done .line { stroke-dashoffset: 0; }
 
 .msg { position: absolute; left: 24px; right: 24px; top: var(--msg-top); text-align: center; opacity: 0; }
@@ -284,13 +283,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
       <div class="seg" role="radiogroup" aria-labelledby="devLbl">
         <button role="radio" data-device="mobile" aria-checked="true">Mobile</button>
         <button role="radio" data-device="desktop" aria-checked="false">Desktop</button>
-      </div>
-    </div>
-    <div class="ctl">
-      <span class="lbl" id="iconLbl">Loader icon</span>
-      <div class="chips" role="group" aria-labelledby="iconLbl">
-        <button class="chip" data-variant="led" aria-pressed="true">LED dots</button>
-        <button class="chip" data-variant="route" aria-pressed="false">Route arrow</button>
       </div>
     </div>
     <div class="ctl">
@@ -356,12 +348,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
       <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div><div class="blob b4"></div><div class="blob b5"></div>
     </div>
     <div class="icon-wrap" id="iconWrap" aria-hidden="true">
-      <svg class="icon on" id="led" viewBox="55 31 41 35" xmlns="http://www.w3.org/2000/svg" fill="#ECC0D2">
-        <circle cx="65" cy="35" r="3"/><circle cx="74" cy="35" r="3"/><circle cx="83" cy="35" r="3"/><circle cx="92" cy="35" r="3"/>
-        <circle cx="81" cy="44" r="3"/><circle cx="70" cy="53" r="3"/>
-        <circle cx="59" cy="62" r="3"/><circle cx="68" cy="62" r="3"/><circle cx="77" cy="62" r="3"/><circle cx="86" cy="62" r="3"/>
-      </svg>
-      <svg class="icon" id="route" viewBox="54 30 42 40" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ECC0D2">
+      <svg class="icon on" id="route" viewBox="54 30 42 40" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ECC0D2">
         <rect class="drop" x="63.2856" y="32.1992" width="3.42857" height="3.42857" fill="#ECC0D2" stroke="none"/>
         <path class="line" pathLength="100" d="M68.4289 34H91.8571L58 61H86" stroke-width="3.5" stroke-linejoin="round"/>
         <path class="head" d="M80 55L86 61L80 67" stroke-width="3.5" stroke-linecap="square" stroke-linejoin="round"/>
@@ -384,10 +371,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   var $ = function (s) { return document.querySelector(s); };
   var els = {
     screen: $("#screen"), dim: $("#dim"), sheet: $("#sheet"), ring: $("#ring"), pin: $("#pin"), status: $("#status"),
-    loader: $("#loader"), grad: $("#grad"), iconWrap: $("#iconWrap"), led: $("#led"), route: $("#route"),
+    loader: $("#loader"), grad: $("#grad"), iconWrap: $("#iconWrap"), route: $("#route"),
     msg: $("#msg"), plp: $("#plp"), logo: $("#logo")
   };
-  var cfg = { device: "mobile", variant: "led", fail: false, plpMs: 2500 };
+  var cfg = { device: "mobile", fail: false, plpMs: 2500 };
   var runId = 0, iconSeq = 0, live = [], iconLive = [];
   var MIN_LOADER = 1200;
   var reduced = function () { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; };
@@ -430,7 +417,7 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
     els.loader.style.display = "none";
     els.iconWrap.style.opacity = 0;
     els.msg.style.opacity = 0; els.msg.textContent = "";
-    els.led.classList.remove("done"); els.route.classList.remove("done");
+    els.route.classList.remove("done");
     els.plp.style.visibility = "hidden"; els.plp.style.opacity = 0;
     els.logo.classList.remove("on");
     document.activeElement && document.activeElement.blur && document.activeElement.blur();
@@ -455,30 +442,8 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   }
 
   /* ---------- icon cycles ---------- */
-  function iconEl() { return cfg.variant === "led" ? els.led : els.route; }
+  function iconEl() { return els.route; }
   var alive = function (seq, id) { return seq === iconSeq && id === runId; };
-
-  async function ledCycle(seq, id) {
-    var dots = Array.prototype.slice.call(els.led.querySelectorAll("circle"));
-    dots.forEach(function (d, i) {
-      anim(d, [
-        { opacity: 0, transform: "scale(0)" },
-        { opacity: 1, transform: "scale(1.15)", offset: .6 },
-        { opacity: 1, transform: "scale(1)" }
-      ], { duration: 180, delay: i * 80, fill: "both", easing: "ease-out" }, iconLive);
-    });
-    await sleep((dots.length - 1) * 80 + 180 + 400);
-    if (!alive(seq, id)) return false;
-    var fade = anim(els.led, [{ opacity: 1 }, { opacity: 0 }], { duration: 250 }, iconLive);
-    await fade;
-    if (!alive(seq, id)) return false;
-    cancelIcon();                       // dots back to hidden while the group is still faded
-    anim(els.led, [{ opacity: 0 }, { opacity: 0 }], { duration: 150 }, iconLive);
-    await sleep(150);
-    if (!alive(seq, id)) return false;
-    cancelIcon();
-    return true;
-  }
 
   async function routeCycle(seq, id) {
     var drop = els.route.querySelector(".drop"), line = els.route.querySelector(".line"), head = els.route.querySelector(".head");
@@ -505,9 +470,9 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   async function iconLoop(id, isReady, onDone) {
     var seq = ++iconSeq;
     cancelIcon();
-    els.led.classList.remove("done"); els.route.classList.remove("done");
+    els.route.classList.remove("done");
     while (alive(seq, id)) {
-      var ok = await (cfg.variant === "led" ? ledCycle : routeCycle)(seq, id);
+      var ok = await routeCycle(seq, id);
       if (!alive(seq, id)) return;      // aborted by a restart (icon switch / replay)
       if (ok && isReady()) { onDone(); return; }
     }
@@ -593,20 +558,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
       document.querySelectorAll("button[data-device]").forEach(function (c) { c.setAttribute("aria-checked", c === b); });
       fit();
       run();
-    });
-  });
-  document.querySelectorAll(".chip").forEach(function (b) {
-    b.addEventListener("click", function () {
-      if (cfg.variant === b.dataset.variant) return;
-      cfg.variant = b.dataset.variant;
-      document.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", c === b); });
-      els.led.classList.remove("on", "done"); els.route.classList.remove("on", "done");
-      iconSeq++; cancelIcon();
-      if (loaderCtx && els.iconWrap.style.opacity === "1" && els.loader.style.display === "block") {
-        iconEl().classList.add("on");
-        if (reduced()) iconEl().classList.add("done");
-        loaderCtx.restart();
-      }
     });
   });
   $("#fail").addEventListener("click", function (e) {
